@@ -121,3 +121,16 @@ func (o completerOption) apply(p *Prompt) {
 func WithCompleter(fn CompletionFunc) Option {
 	return completerOption{fn}
 }
+type continuationPromptOption struct {
+	fn func(lineNum int) string
+}
+
+func (o continuationPromptOption) apply(p *Prompt) {
+	p.mu.state.screen.continuationPrompt = o.fn
+}
+
+// WithContinuationPrompt configures a callback that returns the prompt string
+// for continuation lines (lineNum > 1) in multiline input.
+func WithContinuationPrompt(fn func(lineNum int) string) Option {
+	return continuationPromptOption{fn}
+}

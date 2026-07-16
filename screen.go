@@ -123,6 +123,7 @@ type screen struct {
 	maxY int
 	// outbuf holds the buffered text to send to the terminal.
 	outbuf bytes.Buffer
+	continuationPrompt func(lineNum int) string
 }
 
 func (s *screen) Init() {
@@ -516,6 +517,10 @@ func (s *screen) maybeRecomputeLines() {
 			if newline {
 				pos++
 				text = text[1:]
+				if s.continuationPrompt != nil {
+					p := s.continuationPrompt(y + 1)
+					x = visibleWidth(p)
+				}
 			}
 		}
 	}
@@ -611,6 +616,11 @@ func (s *screen) renderText(end int) {
 				endAttrs(s.cursorPos)
 				s.cursorPos++
 				text = text[1:]
+				if s.continuationPrompt != nil {
+					p := s.continuationPrompt(s.cursorY + 1)
+					s.outbuf.WriteString(p)
+					s.cursorX = visibleWidth(p)
+				}
 			}
 		}
 	}
@@ -784,4 +794,26 @@ func fitGraphemes(s []rune, avail int) (consumed, width int, newline bool) {
 		}
 	}
 	return len(s), width, false
+}
+func visibleWidth(s string) int {
+	var width int
+	inEscape := false
+	for _, r := range s {
+		if r == '\x1b' {
+			inEscape = true
+			continue
+		}
+		if inEscape {
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r == '~' {
+				inEscape = false
+			}
+			continue
+		}
+		if r < 127 {
+			width++
+		} else {
+			width += runewidth.RuneWidth(r)
+		}
+	}
+	return width
 }
