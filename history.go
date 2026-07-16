@@ -122,6 +122,11 @@ func (h *history) Close() error {
 	}
 	return nil
 }
+// ResetIndex resets the history navigation position back to the pending input.
+func (h *history) ResetIndex() {
+	h.index = -1
+	h.pending = ""
+}
 
 // Add adds a new entry to history, overwriting the oldest entry if the max
 // number of history entries has been reached. The current index in the history

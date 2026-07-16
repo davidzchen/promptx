@@ -143,6 +143,7 @@ var baseCommands = map[command]commandFunc{
 		}
 		// Cancel the current input, but leave it on screen.
 		s.screen.Cancel()
+		s.history.ResetIndex()
 		return true, nil
 	},
 	cmdClearScreen: func(s *state, key rune) (bool, error) {

@@ -146,6 +146,7 @@ func (p *Prompt) ReadLine(prompt string) (string, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
+	p.mu.state.history.ResetIndex()
 	p.mu.state.screen.Reset([]rune(prompt))
 	p.mu.state.screen.Flush(p.out)
 
