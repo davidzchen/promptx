@@ -768,7 +768,18 @@ func isWord(r rune) bool {
 }
 
 func fitGraphemes(s []rune, avail int) (consumed, width int, newline bool) {
+	inEscape := false
 	for i, r := range s {
+		if r == '\x1b' {
+			inEscape = true
+			continue
+		}
+		if inEscape {
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r == '~' {
+				inEscape = false
+			}
+			continue
+		}
 		if r == '\n' {
 			return i, width, true
 		}
