@@ -198,6 +198,7 @@ var baseCommands = map[command]commandFunc{
 	},
 	cmdFinishOrEnter: func(s *state, key rune) (bool, error) {
 		if s.inputFinished == nil || s.inputFinished(string(s.screen.Text())) {
+			s.screen.MoveTo(len(s.screen.Text()))
 			s.screen.outbuf.WriteString("\r\n")
 			return true, io.EOF
 		}
