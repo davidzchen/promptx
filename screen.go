@@ -767,17 +767,31 @@ func isWord(r rune) bool {
 	return unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
+func parseEscape(r rune, inEscape bool) (nextInEscape bool, isEscapeChar bool) {
+	if r == '\x1b' {
+		return true, true
+	}
+	if inEscape {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r == '~' {
+			return false, true
+		}
+		return true, true
+	}
+	return false, false
+}
+
+func runeWidth(r rune) int {
+	if r < 127 {
+		return 1
+	}
+	return runewidth.RuneWidth(r)
+}
+
 func fitGraphemes(s []rune, avail int) (consumed, width int, newline bool) {
 	inEscape := false
 	for i, r := range s {
-		if r == '\x1b' {
-			inEscape = true
-			continue
-		}
-		if inEscape {
-			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r == '~' {
-				inEscape = false
-			}
+		var isEscape bool
+		if inEscape, isEscape = parseEscape(r, inEscape); isEscape {
 			continue
 		}
 		if r == '\n' {
@@ -806,25 +820,17 @@ func fitGraphemes(s []rune, avail int) (consumed, width int, newline bool) {
 	}
 	return len(s), width, false
 }
+
 func visibleWidth(s string) int {
 	var width int
 	inEscape := false
 	for _, r := range s {
-		if r == '\x1b' {
-			inEscape = true
+		var isEscape bool
+		if inEscape, isEscape = parseEscape(r, inEscape); isEscape {
 			continue
 		}
-		if inEscape {
-			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r == '~' {
-				inEscape = false
-			}
-			continue
-		}
-		if r < 127 {
-			width++
-		} else {
-			width += runewidth.RuneWidth(r)
-		}
+		width += runeWidth(r)
 	}
 	return width
 }
+
