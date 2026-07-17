@@ -162,6 +162,32 @@ func (h *history) Next(s *state) (bool, error) {
 	if h.searchDir != 0 {
 		return h.ForwardSearch(s)
 	}
+	text := s.screen.Text()
+	pos := s.screen.Position()
+	if nextNL := strings.Index(string(text[pos:]), "\n"); nextNL != -1 {
+		absNextNL := pos + nextNL
+		nextLineStart := absNextNL + 1
+		var nextLineEnd int
+		if nextNextNL := strings.Index(string(text[nextLineStart:]), "\n"); nextNextNL != -1 {
+			nextLineEnd = nextLineStart + nextNextNL
+		} else {
+			nextLineEnd = len(text)
+		}
+		var currLineStart int
+		if lastNL := strings.LastIndex(string(text[:pos]), "\n"); lastNL != -1 {
+			currLineStart = lastNL + 1
+		} else {
+			currLineStart = 0
+		}
+		column := pos - currLineStart
+		nextLineLen := nextLineEnd - nextLineStart
+		targetColumn := column
+		if targetColumn > nextLineLen {
+			targetColumn = nextLineLen
+		}
+		s.screen.MoveTo(nextLineStart + targetColumn)
+		return true, nil
+	}
 	if h.index == -1 {
 		return false, nil
 	}
@@ -179,6 +205,25 @@ func (h *history) Next(s *state) (bool, error) {
 func (h *history) Previous(s *state) (bool, error) {
 	if h.searchDir != 0 {
 		return h.ReverseSearch(s)
+	}
+	text := s.screen.Text()
+	pos := s.screen.Position()
+	if prevNL := strings.LastIndex(string(text[:pos]), "\n"); prevNL != -1 {
+		currLineStart := prevNL + 1
+		var prevLineStart int
+		if prevPrevNL := strings.LastIndex(string(text[:prevNL]), "\n"); prevPrevNL != -1 {
+			prevLineStart = prevPrevNL + 1
+		} else {
+			prevLineStart = 0
+		}
+		column := pos - currLineStart
+		prevLineLen := prevNL - prevLineStart
+		targetColumn := column
+		if targetColumn > prevLineLen {
+			targetColumn = prevLineLen
+		}
+		s.screen.MoveTo(prevLineStart + targetColumn)
+		return true, nil
 	}
 	if h.index+1 >= len(h.entries) {
 		return false, nil
