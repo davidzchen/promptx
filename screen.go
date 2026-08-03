@@ -487,6 +487,7 @@ func (s *screen) maybeRecomputeLines() {
 
 	var pos int
 	var x, y int
+	lineNum := 1
 	s.lines = nil
 
 	for text := s.text; len(text) >= 0; {
@@ -517,8 +518,9 @@ func (s *screen) maybeRecomputeLines() {
 			if newline {
 				pos++
 				text = text[1:]
+				lineNum++
 				if s.continuationPrompt != nil {
-					p := s.continuationPrompt(y + 1)
+					p := s.continuationPrompt(lineNum)
 					x = visibleWidth(p)
 				}
 			}
@@ -581,6 +583,13 @@ func (s *screen) renderText(end int) {
 		}
 	}
 
+	lineNum := 1
+	for _, r := range s.text[:s.cursorPos] {
+		if r == '\n' {
+			lineNum++
+		}
+	}
+
 	for text := s.text[s.cursorPos:end]; len(text) > 0; {
 		consumed, width, newline := fitGraphemes(text, s.width-s.cursorX)
 		for _, r := range text[:consumed] {
@@ -616,8 +625,9 @@ func (s *screen) renderText(end int) {
 				endAttrs(s.cursorPos)
 				s.cursorPos++
 				text = text[1:]
+				lineNum++
 				if s.continuationPrompt != nil {
-					p := s.continuationPrompt(s.cursorY + 1)
+					p := s.continuationPrompt(lineNum)
 					s.outbuf.WriteString(p)
 					s.cursorX = visibleWidth(p)
 				}

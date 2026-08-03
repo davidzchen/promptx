@@ -412,3 +412,51 @@ func TestPrompt(t *testing.T) {
 			})
 	})
 }
+
+func TestContinuationPromptLineNumbersWithWrapping(t *testing.T) {
+	term := newMockTerm(40, 10)
+	var promptCalls []int
+	continuationPrompt := func(lineNum int) string {
+		promptCalls = append(promptCalls, lineNum)
+		return fmt.Sprintf("%4d| ", lineNum)
+	}
+
+	inputFinished := func(text string) bool {
+		return strings.HasSuffix(strings.TrimSpace(text), "}")
+	}
+
+	p, err := New(
+		WithOutput(term),
+		WithSize(40, 10),
+		WithInputFinished(inputFinished),
+		WithContinuationPrompt(continuationPrompt),
+	)
+	require.NoError(t, err)
+
+	p.mu.state.screen.Reset([]rune("(ycl) "))
+
+	// Line 1: "{\n"
+	// Line 2: A long line that wraps around the 40-column terminal width, followed by "\n"
+	// Line 3: "}"
+	longLine := "a_very_long_line_that_wraps_across_multiple_rows_of_terminal_width"
+	input := "{\n" + longLine + "\n}"
+	p.inBytes = []byte(input)
+
+	p.mu.Lock()
+	for len(p.inBytes) > 0 {
+		_, err := p.processInputLocked()
+		require.NoError(t, err)
+	}
+	p.mu.Unlock()
+
+	// Continuation prompt should only ever be called for logical line 2 and line 3,
+	// NOT visual rows (e.g. 4).
+	for _, call := range promptCalls {
+		require.Contains(t, []int{2, 3}, call)
+	}
+
+	output := term.String()
+	require.Contains(t, output, "   2| ")
+	require.Contains(t, output, "   3| ")
+	require.NotContains(t, output, "   4| ")
+}
