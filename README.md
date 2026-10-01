@@ -1,4 +1,4 @@
-# Package promptx
+# Package promptx [![Go Reference](https://pkg.go.dev/badge/github.com/davidzchen/promptx.svg)](https://pkg.go.dev/github.com/davidzchen/promptx)
 
 Package promptx is a command line prompt editor with history, kill-ring, and tab
 completion. It is a fork of the package `github.com/petermattis/prompt` as the
