@@ -1,4 +1,4 @@
-module github.com/petermattis/prompt
+module github.com/davidzchen/promptx
 
 go 1.16
 

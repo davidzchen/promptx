@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/petermattis/prompt"
+	"github.com/davidzchen/promptx"
 )
 
 func init() {
@@ -43,10 +43,10 @@ func main() {
 # - tab completion of SQL keywords
 `)
 
-	p, err := prompt.New(
-		prompt.WithCompleter(completer),
-		prompt.WithHistory(os.ExpandEnv("${HOME}/.cockroachsql_history"), -1),
-		prompt.WithInputFinished(inputFinished))
+	p, err := promptx.New(
+		promptx.WithCompleter(completer),
+		promptx.WithHistory(os.ExpandEnv("${HOME}/.cockroachsql_history"), -1),
+		promptx.WithInputFinished(inputFinished))
 	if err != nil {
 		log.Fatal(err)
 	}

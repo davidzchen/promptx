@@ -1,4 +1,4 @@
-package prompt
+package promptx
 
 import "unicode/utf8"
 
